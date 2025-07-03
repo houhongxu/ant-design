@@ -244,6 +244,7 @@ function InternalFormItem<Values = any>(props: FormItemProps<Values>): React.Rea
     variables = { ...variables, ...messageVariables };
   }
 
+  //// 使用的Field组件
   // >>>>> With Field
   return wrapSSR(
     <Field
@@ -253,6 +254,7 @@ function InternalFormItem<Values = any>(props: FormItemProps<Values>): React.Rea
       validateTrigger={mergedValidateTrigger}
       onMetaChange={onMetaChange}
     >
+      //// ! Filed返回control的参数，control里包含内部value和内部onChange函数
       {(control, renderMeta, context) => {
         const mergedName = toArray(name).length && renderMeta ? renderMeta.name : [];
         const fieldId = getFieldId(mergedName, formName);
@@ -275,6 +277,7 @@ function InternalFormItem<Values = any>(props: FormItemProps<Values>): React.Rea
               );
 
         // ======================= Children =======================
+        //// 合并control
         const mergedControl: typeof control = {
           ...control,
         };
@@ -311,12 +314,14 @@ function InternalFormItem<Values = any>(props: FormItemProps<Values>): React.Rea
             'Must set `name` or use a render function when `dependencies` is set.',
           );
         } else if (isValidElement(children)) {
+          //// 如果是有效的子元素
           warning(
             children.props.defaultValue === undefined,
             'Form.Item',
             '`defaultValue` will not work on controlled Field. You should use `initialValues` of Form instead.',
           );
 
+          //// 合并props添加mergedControl
           const childProps = { ...children.props, ...mergedControl };
           if (!childProps.id) {
             childProps.id = fieldId;
@@ -345,12 +350,14 @@ function InternalFormItem<Values = any>(props: FormItemProps<Values>): React.Rea
             childProps.ref = getItemRef(mergedName, children);
           }
 
+          //// 将onChange事件合并到childProps
           // We should keep user origin event handler
           const triggers = new Set<string>([
             ...toArray(trigger),
             ...toArray(mergedValidateTrigger),
           ]);
 
+          //// ! onChange事件重写为先调用mergedControl的onChange函数，再调用子元素的onChange函数，即先内部onChange，再外部onChange
           triggers.forEach((eventName) => {
             childProps[eventName] = (...args: any[]) => {
               mergedControl[eventName]?.(...args);
@@ -371,6 +378,7 @@ function InternalFormItem<Values = any>(props: FormItemProps<Values>): React.Rea
               update={children}
               childProps={watchingChildProps}
             >
+              //// ! 克隆并赋值props，重写的onChange函数就控制了children
               {cloneElement(children, childProps)}
             </MemoInput>
           );
@@ -397,6 +405,7 @@ interface FormItemInterface extends InternalFormItemType {
   useStatus: typeof useFormItemStatus;
 }
 
+//// 导出InternalFormItem
 const FormItem = InternalFormItem as FormItemInterface;
 FormItem.useStatus = useFormItemStatus;
 

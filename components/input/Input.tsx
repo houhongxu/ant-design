@@ -215,6 +215,7 @@ const Input = forwardRef<InputRef, InputProps>((props, ref) => {
     mergedAllowClear = { clearIcon: <CloseCircleFilled /> };
   }
 
+  // ! rest中有value，透传了value和onChange给原生input，所以支持受控组件也支持非受控组件，formitem控制也是通过受控组件的方式
   return wrapSSR(
     <RcInput
       ref={composeRef(ref, inputRef)}
